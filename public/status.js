@@ -79,8 +79,8 @@ async function loadToken(tokenNumber) {
   }
 
   try {
-    const response = await fetch(`/api/requests/${encodeURIComponent(tokenNumber)}`);
-    const data = await response.json();
+    const response = await apiFetch(`/api/requests/${encodeURIComponent(tokenNumber)}`);
+    const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
       throw new Error(data.message || "Token lookup failed.");
@@ -91,7 +91,7 @@ async function loadToken(tokenNumber) {
     renderRequest(data);
     startRefreshLoop();
   } catch (error) {
-    setStatusMessage(error.message, "error");
+    setStatusMessage(error.message || "NetworkError when attempting to fetch resource", "error");
   }
 }
 

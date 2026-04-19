@@ -1,6 +1,7 @@
 
 
 const express = require("express");
+const cors = require("cors");
 const multer = require("multer");
 const fs = require("fs");
 const fsp = require("fs/promises");
@@ -16,10 +17,6 @@ const STATUS = {
   COMPLETED: "Completed",
   EXPIRED: "Expired"
 };
-const cors = require('cors');
-app.use(cors());
-
-
 const ACTIVE_QUEUE_STATUSES = [STATUS.WAITING, STATUS.PRINTING];
 
 const uploadsDir = path.join(__dirname, "uploads");
@@ -57,7 +54,18 @@ const upload = multer({
   }
 });
 
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+  allowedHeaders: ["Content-Type"]
+}));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.get("/", (_req, res) => {
+  res.send("Backend is running");
+});
+
 app.use(express.static(publicDir));
 
 function createTokenNumber() {
@@ -204,6 +212,7 @@ app.get("/api/health", (_req, res) => {
 
 app.post("/api/requests", upload.single("printFile"), async (req, res) => {
   try {
+    console.log("Request received");
     await expireOldRequests();
 
     if (!req.file) {

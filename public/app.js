@@ -20,12 +20,11 @@ uploadForm.addEventListener("submit", async (event) => {
   try {
     // Send the file and form details together so the server can create the queue entry.
     const formData = new FormData(uploadForm);
-    const response = await fetch("https://smart-print-queue-system.onrender.com/api/requests", {
+    const response = await apiFetch("/api/requests", {
       method: "POST",
       body: formData
     });
-
-    const data = await response.json();
+    const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
       throw new Error(data.message || "Unable to create print request.");
@@ -33,7 +32,7 @@ uploadForm.addEventListener("submit", async (event) => {
 
     window.location.href = `/status.html?token=${encodeURIComponent(data.tokenNumber)}&created=1`;
   } catch (error) {
-    setFormMessage(error.message, "error");
+    setFormMessage(error.message || "NetworkError when attempting to fetch resource", "error");
   } finally {
     submitButton.disabled = false;
     submitButton.textContent = "Generate Token";

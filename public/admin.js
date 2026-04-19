@@ -96,8 +96,8 @@ function renderStats(stats) {
 async function loadQueue() {
   try {
     // Polling keeps the dashboard simple and also refreshes the student view quickly.
-    const response = await fetch("/api/queue");
-    const data = await response.json();
+    const response = await apiFetch("/api/queue");
+    const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
       throw new Error(data.message || "Unable to load queue.");
@@ -107,14 +107,14 @@ async function loadQueue() {
     renderStats(data.stats);
     lastUpdated.textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
   } catch (error) {
-    setAdminMessage(error.message, "error");
+    setAdminMessage(error.message || "NetworkError when attempting to fetch resource", "error");
   }
 }
 
 async function updateStatus(tokenNumber, status) {
   try {
     setAdminMessage(`Updating ${tokenNumber}...`);
-    const response = await fetch(`/api/requests/${encodeURIComponent(tokenNumber)}/status`, {
+    const response = await apiFetch(`/api/requests/${encodeURIComponent(tokenNumber)}/status`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json"
@@ -122,7 +122,7 @@ async function updateStatus(tokenNumber, status) {
       body: JSON.stringify({ status })
     });
 
-    const data = await response.json();
+    const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
       throw new Error(data.message || "Status update failed.");
@@ -131,7 +131,7 @@ async function updateStatus(tokenNumber, status) {
     setAdminMessage(`${tokenNumber} moved to ${data.status}.`, "success");
     await loadQueue();
   } catch (error) {
-    setAdminMessage(error.message, "error");
+    setAdminMessage(error.message || "NetworkError when attempting to fetch resource", "error");
   }
 }
 
