@@ -56,7 +56,7 @@ function renderFileControls(request) {
   return `
     <div class="file-links">
       <a class="file-link-button" href="${safeUrl}" target="_blank" rel="noreferrer">View</a>
-      <a class="file-link-button" href="${safeUrl}" download>Download</a>
+      <button class="file-link-button file-link-button--danger" data-delete-file="${request.tokenNumber}" type="button">Delete</button>
     </div>
   `;
 }
@@ -153,7 +153,33 @@ async function updateStatus(tokenNumber, status) {
   }
 }
 
+async function deleteFile(tokenNumber) {
+  try {
+    setAdminMessage(`Deleting file for ${tokenNumber}...`);
+    const response = await apiFetch(`/api/requests/${encodeURIComponent(tokenNumber)}/file`, {
+      method: "DELETE"
+    });
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(data.message || "File delete failed.");
+    }
+
+    setAdminMessage(`File deleted for ${tokenNumber}.`, "success");
+    await loadQueue();
+  } catch (error) {
+    setAdminMessage(error.message || "NetworkError when attempting to fetch resource", "error");
+  }
+}
+
 queueBody.addEventListener("click", async (event) => {
+  const deleteFileButton = event.target.closest("button[data-delete-file]");
+
+  if (deleteFileButton) {
+    await deleteFile(deleteFileButton.dataset.deleteFile);
+    return;
+  }
+
   const button = event.target.closest("button[data-token]");
 
   if (!button) {

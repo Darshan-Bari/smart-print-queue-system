@@ -172,9 +172,9 @@ function serializeRequest(printRequest) {
     queuePosition: getQueuePosition(printRequest),
     estimatedWaitTimeMinutes: getEstimatedWaitTimeMinutes(printRequest),
     fileDeleted: printRequest.fileDeleted,
-    fileUrl: printRequest.fileDeleted || !printRequest.storagePath
-      ? null
-      : `/uploads/${path.basename(printRequest.storagePath)}`,
+    fileUrl: (!printRequest.fileDeleted && printRequest.storagePath)
+      ? `/uploads/${path.basename(printRequest.storagePath)}`
+      : null,
     deletionReason: printRequest.deletionReason || null,
     privacyMessage: "Your file will be automatically deleted after printing for privacy."
   };
@@ -326,6 +326,27 @@ app.patch("/api/requests/:tokenNumber/status", async (req, res) => {
   if (nextStatus === STATUS.COMPLETED) {
     await deleteStoredFile(printRequest, "completed");
   }
+
+  res.json(serializeRequest(printRequest));
+});
+
+app.delete("/api/requests/:tokenNumber/file", async (req, res) => {
+  await expireOldRequests();
+
+  const printRequest = findRequest(req.params.tokenNumber);
+
+  if (!printRequest) {
+    res.status(404).json({ message: "Token not found." });
+    return;
+  }
+
+  if (printRequest.fileDeleted || !printRequest.storagePath) {
+    res.status(400).json({ message: "File already deleted." });
+    return;
+  }
+
+  await deleteStoredFile(printRequest, "manual");
+  printRequest.updatedAt = new Date().toISOString();
 
   res.json(serializeRequest(printRequest));
 });

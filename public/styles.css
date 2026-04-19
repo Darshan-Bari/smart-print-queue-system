@@ -469,10 +469,16 @@ button:focus {
   background: white;
   border: 3px solid var(--ink);
   box-shadow: 4px 4px 0 var(--ink);
+  cursor: pointer;
 }
 
 .file-link-button:hover {
   background: var(--accent-3);
+}
+
+.file-link-button--danger:hover {
+  background: var(--accent-2);
+  color: white;
 }
 
 .file-note {
