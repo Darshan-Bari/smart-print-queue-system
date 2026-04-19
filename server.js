@@ -16,6 +16,10 @@ const STATUS = {
   COMPLETED: "Completed",
   EXPIRED: "Expired"
 };
+const cors = require('cors');
+app.use(cors());
+
+
 const ACTIVE_QUEUE_STATUSES = [STATUS.WAITING, STATUS.PRINTING];
 
 const uploadsDir = path.join(__dirname, "uploads");
