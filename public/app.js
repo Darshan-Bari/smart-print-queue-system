@@ -18,21 +18,37 @@ uploadForm.addEventListener("submit", async (event) => {
   submitButton.textContent = "Generating...";
 
   try {
-    // Send the file and form details together so the server can create the queue entry.
     const formData = new FormData(uploadForm);
+
     const response = await apiFetch("/api/requests", {
       method: "POST",
       body: formData
     });
-    const data = await response.json().catch(() => ({}));
+
+    const contentType = response.headers.get("content-type");
+
+    let data = {};
+
+    if (contentType && contentType.includes("application/json")) {
+      data = await response.json();
+    } else {
+      const text = await response.text();
+      console.error("Server returned non-JSON:", text);
+      throw new Error("Server error. Please try again.");
+    }
 
     if (!response.ok) {
       throw new Error(data.message || "Unable to create print request.");
     }
 
+    if (!data.tokenNumber) {
+      throw new Error("Invalid response from server.");
+    }
+
     window.location.href = `/status.html?token=${encodeURIComponent(data.tokenNumber)}&created=1`;
+
   } catch (error) {
-    setFormMessage(error.message || "NetworkError when attempting to fetch resource", "error");
+    setFormMessage(error.message || "Network error. Please try again.", "error");
   } finally {
     submitButton.disabled = false;
     submitButton.textContent = "Generate Token";
