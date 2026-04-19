@@ -20,7 +20,7 @@ uploadForm.addEventListener("submit", async (event) => {
   try {
     // Send the file and form details together so the server can create the queue entry.
     const formData = new FormData(uploadForm);
-    const response = await fetch("/api/requests", {
+    const response = await fetch("https://smart-print-queue-system.onrender.com/api/requests", {
       method: "POST",
       body: formData
     });
