@@ -66,6 +66,7 @@ app.get("/", (_req, res) => {
   res.send("Backend is running");
 });
 
+app.use("/uploads", express.static(uploadsDir));
 app.use(express.static(publicDir));
 
 function createTokenNumber() {
@@ -171,6 +172,9 @@ function serializeRequest(printRequest) {
     queuePosition: getQueuePosition(printRequest),
     estimatedWaitTimeMinutes: getEstimatedWaitTimeMinutes(printRequest),
     fileDeleted: printRequest.fileDeleted,
+    fileUrl: printRequest.fileDeleted || !printRequest.storagePath
+      ? null
+      : `/uploads/${path.basename(printRequest.storagePath)}`,
     deletionReason: printRequest.deletionReason || null,
     privacyMessage: "Your file will be automatically deleted after printing for privacy."
   };

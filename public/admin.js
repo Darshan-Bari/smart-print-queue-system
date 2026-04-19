@@ -46,6 +46,21 @@ function createActionButton(tokenNumber, label, status, extraClass = "") {
   return `<button class="action-button ${extraClass}" data-token="${tokenNumber}" data-status="${status}">${label}</button>`;
 }
 
+function renderFileControls(request) {
+  if (!request.fileUrl) {
+    return `<div class="file-links"><span class="file-note">File deleted for privacy</span></div>`;
+  }
+
+  const safeUrl = `${API_BASE_URL}${request.fileUrl}`;
+
+  return `
+    <div class="file-links">
+      <a class="file-link-button" href="${safeUrl}" target="_blank" rel="noreferrer">View</a>
+      <a class="file-link-button" href="${safeUrl}" download>Download</a>
+    </div>
+  `;
+}
+
 function renderActions(request) {
   const isLocked = request.status === "Completed" || request.status === "Expired";
 
@@ -74,7 +89,10 @@ function renderRows(items) {
         <tr>
           <td><strong>${escapeHtml(request.tokenNumber)}</strong></td>
           <td>${escapeHtml(request.studentName)}</td>
-          <td>${escapeHtml(request.fileName)}</td>
+          <td>
+            <div><strong>${escapeHtml(request.fileName)}</strong></div>
+            ${renderFileControls(request)}
+          </td>
           <td>${request.copies}</td>
           <td>${escapeHtml(request.printType)}</td>
           <td><span class="${getStatusClass(request.status)}">${escapeHtml(request.status)}</span></td>
