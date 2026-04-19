@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Track Print Token</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="page-bg">
+    <header class="hero compact-hero">
+      <div class="hero__tag">Live Token Tracking</div>
+      <h1>WATCH THE QUEUE MOVE.</h1>
+      <p class="hero__copy">Track your token in real time and see exactly when your print is ready.</p>
+      <nav class="hero__nav">
+        <a href="/" class="nav-chip">User Upload</a>
+        <a href="/status.html" class="nav-chip is-active">Track Token</a>
+        <a href="/admin.html" class="nav-chip">Admin Dashboard</a>
+      </nav>
+    </header>
+
+    <main class="layout status-layout">
+      <section class="panel status-panel">
+        <div class="panel__header">
+          <span class="panel__eyebrow">Track Request</span>
+          <h2>Enter your token</h2>
+        </div>
+
+        <form id="lookupForm" class="lookup-form">
+          <label class="field">
+            <span>Token number</span>
+            <input type="text" id="tokenInput" placeholder="Example: T-001" required />
+          </label>
+          <button type="submit" class="cta-button">Load Status</button>
+        </form>
+
+        <div id="confirmationBanner" class="success-banner hidden">
+          Print request submitted successfully. Keep this token with you.
+        </div>
+
+        <div id="statusMessage" class="form-message" aria-live="polite"></div>
+      </section>
+
+      <section class="panel board-panel">
+        <div class="token-board" id="tokenBoard">
+          <span class="board-label">Token</span>
+          <strong class="board-value">--</strong>
+        </div>
+
+        <div class="metrics-grid">
+          <article class="metric-card">
+            <span>Queue Position</span>
+            <strong id="queuePositionValue">--</strong>
+          </article>
+          <article class="metric-card">
+            <span>Estimated Wait</span>
+            <strong id="waitTimeValue">--</strong>
+          </article>
+          <article class="metric-card">
+            <span>Status</span>
+            <strong id="statusValue">--</strong>
+          </article>
+        </div>
+
+        <div class="details-box" id="detailsBox">
+          <p>Load a token to see the full print request details.</p>
+        </div>
+      </section>
+    </main>
+
+    <script src="/status.js"></script>
+  </body>
+</html>

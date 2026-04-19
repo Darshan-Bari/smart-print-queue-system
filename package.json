@@ -1,0 +1,13 @@
+{
+  "name": "smart-print-queue-prototype",
+  "version": "1.0.0",
+  "description": "Brutalist Smart Print Queue and Pre-Upload System prototype for college-area print shops.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "multer": "^2.1.1"
+  }
+}

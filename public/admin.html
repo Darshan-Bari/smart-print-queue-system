@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Queue Dashboard</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="page-bg">
+    <header class="hero compact-hero">
+      <div class="hero__tag">Shop Operator Panel</div>
+      <h1>RUN THE COUNTER LIKE A CONTROL ROOM.</h1>
+      <p class="hero__copy">Update statuses, keep the queue moving, and let the student side refresh automatically.</p>
+      <nav class="hero__nav">
+        <a href="/" class="nav-chip">User Upload</a>
+        <a href="/status.html" class="nav-chip">Track Token</a>
+        <a href="/admin.html" class="nav-chip is-active">Admin Dashboard</a>
+      </nav>
+    </header>
+
+    <main class="dashboard-wrap">
+      <section class="stats-grid" id="statsGrid">
+        <article class="stat-card">
+          <span>Total Jobs</span>
+          <strong id="totalCount">0</strong>
+        </article>
+        <article class="stat-card">
+          <span>Waiting</span>
+          <strong id="waitingCount">0</strong>
+        </article>
+        <article class="stat-card">
+          <span>Printing</span>
+          <strong id="printingCount">0</strong>
+        </article>
+        <article class="stat-card">
+          <span>Ready</span>
+          <strong id="readyCount">0</strong>
+        </article>
+      </section>
+
+      <section class="panel table-panel">
+        <div class="panel__header panel__header--inline">
+          <div>
+            <span class="panel__eyebrow">Queue View</span>
+            <h2>All print requests</h2>
+          </div>
+          <div class="inline-note" id="lastUpdated">Refreshing automatically...</div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="queue-table">
+            <thead>
+              <tr>
+                <th>Token</th>
+                <th>Name</th>
+                <th>File</th>
+                <th>Copies</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Privacy</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="queueBody">
+              <tr>
+                <td colspan="8" class="empty-state">No print requests yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p id="adminMessage" class="form-message" aria-live="polite"></p>
+      </section>
+    </main>
+
+    <script src="/admin.js"></script>
+  </body>
+</html>
