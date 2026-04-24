@@ -1,4 +1,4 @@
-const API_BASE_URL = "https://smart-print-queue-system.onrender.com";
+const API_BASE_URL = window.API_BASE_URL || "";
 
 function delay(ms) {
   return new Promise((resolve) => {
