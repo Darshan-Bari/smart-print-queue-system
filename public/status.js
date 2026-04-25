@@ -36,6 +36,10 @@ function setStatusMessage(message, type = "") {
   }
 }
 
+function getStatusClass(status) {
+  return `status-pill status-${String(status).toLowerCase()}`;
+}
+
 function formatWait(minutes) {
   if (minutes <= 0) {
     return "Ready now";
@@ -49,6 +53,7 @@ function renderRequest(data) {
   queuePositionValue.textContent = data.queuePosition === 0 ? "Now" : `#${data.queuePosition}`;
   waitTimeValue.textContent = formatWait(data.estimatedWaitTimeMinutes);
   statusValue.textContent = data.status;
+  statusValue.className = getStatusClass(data.status);
 
   detailsBox.innerHTML = `
     <p><strong>File:</strong> ${escapeHtml(data.fileName)}</p>

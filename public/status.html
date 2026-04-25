@@ -8,9 +8,9 @@
   </head>
   <body class="page-bg">
     <header class="hero compact-hero">
-      <div class="hero__tag">Live Token Tracking</div>
-      <h1>WATCH THE QUEUE MOVE.</h1>
-      <p class="hero__copy">Track your token in real time and see exactly when your print is ready.</p>
+      <div class="hero__tag">Token Tracking</div>
+      <h1>Check your print status in real time.</h1>
+      <p class="hero__copy">Enter your token number to view queue position, wait estimate, and current status.</p>
       <nav class="hero__nav">
         <a href="/" class="nav-chip">User Upload</a>
         <a href="/status.html" class="nav-chip is-active">Track Token</a>
@@ -23,6 +23,7 @@
         <div class="panel__header">
           <span class="panel__eyebrow">Track Request</span>
           <h2>Enter your token</h2>
+          <p class="panel__description">Use the token you received after uploading your file.</p>
         </div>
 
         <form id="lookupForm" class="lookup-form">
@@ -57,7 +58,7 @@
           </article>
           <article class="metric-card">
             <span>Status</span>
-            <strong id="statusValue">--</strong>
+            <strong id="statusValue" class="status-pill">--</strong>
           </article>
         </div>
 
