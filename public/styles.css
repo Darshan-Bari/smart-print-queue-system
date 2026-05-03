@@ -510,6 +510,54 @@ button:focus {
     padding-right: 16px;
   }
 
+  .hero {
+    margin: 16px;
+    padding: 20px;
+  }
+
+  .hero h1 {
+    font-size: clamp(1.9rem, 7vw, 3rem);
+  }
+
+  .hero__copy {
+    max-width: none;
+    font-size: 0.98rem;
+  }
+
+  .hero__nav {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .nav-chip {
+    width: 100%;
+    text-align: center;
+    padding: 12px 14px;
+  }
+
+  .panel {
+    padding: 18px;
+  }
+
+  .panel__header--inline {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .stats-grid {
+    gap: 12px;
+  }
+
+  .queue-table {
+    min-width: 860px;
+  }
+
+  .queue-table th,
+  .queue-table td {
+    padding: 12px;
+  }
+
 .modal {
   position: fixed;
   top: 0;
@@ -532,4 +580,120 @@ button:focus {
 .modal-content {
   max-width: 400px;
   width: 100%;
+}
+
+}
+
+@media (max-width: 720px) {
+  .hero {
+    margin: 12px;
+    padding: 18px;
+  }
+
+  .hero h1 {
+    font-size: clamp(1.7rem, 8vw, 2.5rem);
+  }
+
+  .hero__copy {
+    font-size: 0.94rem;
+    line-height: 1.45;
+  }
+
+  .hero__nav {
+    gap: 8px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .nav-chip {
+    padding: 11px 12px;
+    font-size: 0.95rem;
+    width: auto;
+    flex: 1 1 0;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* hide admin dashboard link on small screens */
+  .hero__nav a[href="/admin.html"] {
+    display: none !important;
+  }
+
+  .layout,
+  .dashboard-wrap,
+  .status-layout {
+    gap: 16px;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .panel {
+    padding: 16px;
+  }
+
+  .panel__header,
+  .panel__header--inline {
+    margin-bottom: 14px;
+  }
+
+  .panel__header--inline h2 {
+    font-size: 1.25rem;
+  }
+
+  .panel__description,
+  .inline-note,
+  .details-box,
+  .privacy-note {
+    font-size: 0.94rem;
+  }
+
+  .metric-card,
+  .stat-card {
+    padding: 16px;
+  }
+
+  .metric-card strong,
+  .stat-card strong {
+    font-size: 1.7rem;
+  }
+
+  .queue-table {
+    min-width: 740px;
+  }
+
+  .queue-table th,
+  .queue-table td {
+    padding: 10px;
+    font-size: 0.9rem;
+  }
+
+  .action-stack {
+    gap: 8px;
+  }
+
+  .action-button {
+    padding: 9px 10px;
+    font-size: 0.74rem;
+  }
+
+  .file-links {
+    gap: 6px;
+  }
+
+  .file-link-button {
+    padding: 7px 9px;
+  }
+
+  .modal {
+    padding: 12px;
+  }
+
+  .modal-content {
+    max-width: calc(100vw - 24px);
+  }
 }

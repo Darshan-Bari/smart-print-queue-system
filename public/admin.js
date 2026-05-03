@@ -6,6 +6,25 @@ const waitingCount = document.getElementById("waitingCount");
 const printingCount = document.getElementById("printingCount");
 const readyCount = document.getElementById("readyCount");
 
+// If this page is opened on a small/mobile screen, show a simple notice and stop further admin behavior.
+if (window.matchMedia && window.matchMedia("(max-width: 720px)").matches) {
+  document.body.innerHTML = `
+    <header class="hero compact-hero">
+      <div class="hero__tag">Admin Dashboard</div>
+      <h1>Admin Unavailable On Mobile</h1>
+      <p class="hero__copy">The admin dashboard is only available on desktop or laptop devices. Please use a larger device to manage the queue.</p>
+    </header>
+    <main style="padding: 16px;">
+      <div class="panel">
+        <p style="font-weight:700;">Return to the upload page: <a href="/">Upload Page</a></p>
+      </div>
+    </main>
+  `;
+
+  // stop executing the rest of this script
+  throw new Error("Admin dashboard disabled on small screens");
+}
+
 function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, (character) => {
     const entities = {
@@ -47,23 +66,36 @@ function createActionButton(tokenNumber, label, status, extraClass = "") {
 }
 
 function createPrintButton(request) {
-  if (!request.fileUrl) {
+  const fileObj = (request.files && request.files.length) ? request.files[0] : null;
+  const fileUrl = fileObj ? fileObj.fileUrl : null;
+
+  if (!fileUrl) {
     return `<button class="action-button is-secondary" type="button" disabled>Print Unavailable</button>`;
   }
 
-  return `<button class="action-button is-print" data-token="${request.tokenNumber}" data-print-url="${request.fileUrl}" type="button">Print</button>`;
+  return `<button class="action-button is-print" data-token="${request.tokenNumber}" data-print-url="${fileUrl}" type="button">Print</button>`;
 }
 
 function renderFileControls(request) {
-  if (!request.fileUrl) {
+  const files = request.files || [];
+  if (!files.length) {
     return `<div class="file-links"><span class="file-note">File deleted for privacy</span></div>`;
   }
 
-  const safeUrl = `${API_BASE_URL}${request.fileUrl}`;
+  const links = files
+    .map((f, i) => {
+      const safeUrl = `${API_BASE_URL}${f.fileUrl}`;
+      return `
+        <div style="display:inline-flex; gap:8px; align-items:center;">
+          <a class="file-link-button" href="${safeUrl}" target="_blank" rel="noreferrer">View${files.length>1?` ${i+1}`:''}</a>
+        </div>
+      `;
+    })
+    .join("");
 
   return `
     <div class="file-links">
-      <a class="file-link-button" href="${safeUrl}" target="_blank" rel="noreferrer">View</a>
+      ${links}
       <button class="file-link-button file-link-button--danger" data-delete-file="${request.tokenNumber}" type="button">Delete</button>
     </div>
   `;
