@@ -60,6 +60,7 @@ function renderRequest(data) {
   detailsBox.innerHTML = `
     <p><strong>Files:</strong> ${fileNames}</p>
     <p><strong>Name:</strong> ${escapeHtml(data.studentName)}</p>
+    <p><strong>Remark:</strong> ${escapeHtml(data.remark || "None")}</p>
     <p><strong>Copies:</strong> ${data.copies}</p>
     <p><strong>Print Type:</strong> ${escapeHtml(data.printType)}</p>
     <p><strong>Status:</strong> ${escapeHtml(data.status)}</p>

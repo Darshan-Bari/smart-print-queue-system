@@ -106,6 +106,7 @@ function renderRows(items) {
           <td>
             ${renderFileControls(request)}
           </td>
+          <td><span style="font-size: 0.85rem; color: #d54f2f; font-weight: bold;">${escapeHtml(request.remark || "-")}</span></td>
           <td>${request.copies}</td>
           <td>${escapeHtml(request.printType)}</td>
           <td><strong>₹${request.totalCost}</strong></td>
@@ -266,3 +267,49 @@ queueBody.addEventListener("click", async (event) => {
 
 loadQueue();
 setInterval(loadQueue, 5000);
+
+const showQrBtn = document.getElementById("showQrBtn");
+const closeQrBtn = document.getElementById("closeQrBtn");
+const qrModal = document.getElementById("qrModal");
+const websiteQR = document.getElementById("websiteQR");
+const websiteUrlText = document.getElementById("websiteUrlText");
+let shareAppUrl = window.location.origin;
+
+async function loadShareAppUrl() {
+  try {
+    const response = await apiFetch("/api/config");
+    const data = await response.json().catch(() => ({}));
+
+    if (response.ok && data.websiteUrl) {
+      shareAppUrl = data.websiteUrl;
+    }
+  } catch (_error) {
+    shareAppUrl = window.location.origin;
+  }
+}
+
+if (showQrBtn) {
+  showQrBtn.addEventListener("click", () => {
+    const targetUrl = shareAppUrl;
+
+    websiteQR.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(targetUrl)}`;
+    websiteUrlText.textContent = targetUrl;
+    qrModal.classList.remove("hidden");
+  });
+}
+
+if (closeQrBtn) {
+  closeQrBtn.addEventListener("click", () => {
+    qrModal.classList.add("hidden");
+  });
+}
+
+if (qrModal) {
+  qrModal.addEventListener("click", (e) => {
+    if (e.target === qrModal) {
+      qrModal.classList.add("hidden");
+    }
+  });
+}
+
+loadShareAppUrl();

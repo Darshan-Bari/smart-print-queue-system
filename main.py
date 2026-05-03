@@ -4,6 +4,7 @@ import random
 import re
 import shutil
 import time
+import socket
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import List
@@ -67,6 +68,23 @@ def isoformat_utc(value):
 
 def now_iso():
     return isoformat_utc(utc_now())
+
+
+def get_lan_ip():
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+            sock.connect(("8.8.8.8", 80))
+            return sock.getsockname()[0]
+    except Exception:
+        try:
+            return socket.gethostbyname(socket.gethostname())
+        except Exception:
+            return "127.0.0.1"
+
+
+def get_share_url():
+    port = int(os.getenv("PORT", "3000"))
+    return f"http://{get_lan_ip()}:{port}"
 
 
 def parse_iso(value):
@@ -224,7 +242,7 @@ def get_page_count(storage_path, content_type, filename):
     return 1
 
 
-def create_request_item(*, token_number, token_index, student_name, files_data, copies, print_type, payment_method, page_count):
+def create_request_item(*, token_number, token_index, student_name, remark, files_data, copies, print_type, payment_method, page_count):
     created_at = utc_now()
     created_at_iso = isoformat_utc(created_at)
 
@@ -234,6 +252,7 @@ def create_request_item(*, token_number, token_index, student_name, files_data, 
         "tokenNumber": token_number,
         "tokenIndex": token_index,
         "studentName": student_name.strip() or "Anonymous Student",
+        "remark": remark.strip(),
         "files": files_data,
         "copies": copies,
         "printType": print_type,
@@ -397,6 +416,7 @@ async def health_check():
 async def create_request(
     printFiles: List[UploadFile] = File(...),
     name: str = Form(default=""),
+    remark: str = Form(default=""),
     copies: str = Form(default=""),
     printType: str = Form(default=""),
     paymentMethod: str = Form(default="Cash"),
@@ -433,6 +453,7 @@ async def create_request(
             token_number=token_number,
             token_index=token_index,
             student_name=name,
+            remark=remark,
             files_data=files_data,
             copies=copies_value,
             print_type=printType,
@@ -551,6 +572,11 @@ async def delete_request_file(token_number: str):
     item["updatedAt"] = now_iso()
 
     return serialize_request(item)
+
+
+@app.get("/api/config")
+async def get_app_config():
+    return {"websiteUrl": get_share_url()}
 
 
 app.mount("/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
