@@ -1,3 +1,7 @@
+// CHANGE YOUR UPI ID HERE
+const SHOP_UPI_ID = "9834961796@upi"; 
+window.SHOP_UPI_ID = SHOP_UPI_ID;
+
 const API_BASE_URL = window.API_BASE_URL || "";
 
 function delay(ms) {

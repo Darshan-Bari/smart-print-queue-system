@@ -9,7 +9,7 @@ This project is a simple, explainable print queue prototype for college-area pri
 ## Features (unchanged)
 
 - Student upload form (PDF or image)
-- Token generation (`T-001`, `T-002`, ...)
+- Token generation (`1`, `2`, ...)
 - Queue tracking page with auto refresh
 - Admin dashboard to update status (`Waiting`, `Printing`, `Ready`, `Completed`)
 - Manual file delete from admin dashboard

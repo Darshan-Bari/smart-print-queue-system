@@ -6,7 +6,10 @@ import shutil
 import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from typing import List
 
+import pypdf
+import pptx
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -72,7 +75,7 @@ def parse_iso(value):
 
 def make_token():
     global next_token_number
-    token = f"T-{next_token_number:03d}"
+    token = f"{next_token_number}"
     token_index = next_token_number
     next_token_number += 1
     return token, token_index
@@ -192,31 +195,51 @@ def validate_print_type(print_type):
 
 async def validate_upload_file(print_file):
     if print_file is None:
-        raise HTTPException(status_code=400, detail="Please upload a PDF or image file.")
+        raise HTTPException(status_code=400, detail="Please upload a PDF, PPTX, or image file.")
 
     content_type = (print_file.content_type or "").lower()
     is_pdf = content_type == "application/pdf"
     is_image = content_type.startswith("image/")
+    is_pptx = "presentation" in content_type or "powerpoint" in content_type or (print_file.filename or "").lower().endswith((".pptx", ".ppt"))
 
-    if is_pdf or is_image:
+    if is_pdf or is_image or is_pptx:
         return
 
     await print_file.close()
-    raise HTTPException(status_code=400, detail="Only PDF and image files are allowed.")
+    raise HTTPException(status_code=400, detail="Only PDF, PPTX, and image files are allowed.")
 
 
-def create_request_item(*, token_number, token_index, student_name, file_name, storage_path, copies, print_type):
+def get_page_count(storage_path, content_type, filename):
+    content_type = (content_type or "").lower()
+    filename = (filename or "").lower()
+    try:
+        if "pdf" in content_type or filename.endswith(".pdf"):
+            reader = pypdf.PdfReader(str(storage_path))
+            return len(reader.pages)
+        elif "presentation" in content_type or "powerpoint" in content_type or filename.endswith((".pptx", ".ppt")):
+            prs = pptx.Presentation(str(storage_path))
+            return len(prs.slides)
+    except Exception as e:
+        print("Page count error:", e)
+    return 1
+
+
+def create_request_item(*, token_number, token_index, student_name, files_data, copies, print_type, payment_method, page_count):
     created_at = utc_now()
     created_at_iso = isoformat_utc(created_at)
+
+    total_cost = (2 if print_type == "Black & White" else 6) * copies * page_count
 
     return {
         "tokenNumber": token_number,
         "tokenIndex": token_index,
         "studentName": student_name.strip() or "Anonymous Student",
-        "fileName": file_name or "uploaded-file",
-        "storagePath": str(storage_path),
+        "files": files_data,
         "copies": copies,
         "printType": print_type,
+        "paymentMethod": payment_method,
+        "paymentStatus": "Unpaid",
+        "totalCost": total_cost,
         "status": STATUS_WAITING,
         "createdAt": created_at_iso,
         "updatedAt": created_at_iso,
@@ -226,18 +249,21 @@ def create_request_item(*, token_number, token_index, student_name, file_name, s
 
 
 def delete_file_for_request(item, reason):
-    if item["fileDeleted"] or not item["storagePath"]:
+    if item["fileDeleted"]:
         return
 
-    try:
-        remove_storage_file(item["storagePath"])
-    except FileNotFoundError:
-        pass
-    except Exception as error:
-        print("File delete failed:", error)
+    for f in item.get("files", []):
+        try:
+            if f.get("storagePath"):
+                remove_storage_file(f["storagePath"])
+        except FileNotFoundError:
+            pass
+        except Exception as error:
+            print("File delete failed:", error)
 
     item["fileDeleted"] = True
-    item["storagePath"] = None
+    for f in item.get("files", []):
+        f["storagePath"] = None
     item["deletionReason"] = reason
     item["deletedAt"] = now_iso()
 
@@ -281,9 +307,15 @@ def serialize_request(item, queue_metadata=None):
     queue_metadata = queue_metadata or {}
     positions = queue_metadata.get("positions", {})
     wait_times = queue_metadata.get("wait_times", {})
-    file_url = None
-    if not item["fileDeleted"] and item["storagePath"]:
-        file_url = f"/uploads/{Path(item['storagePath']).name}"
+    
+    file_urls = []
+    if not item["fileDeleted"]:
+        for f in item.get("files", []):
+            if f.get("storagePath"):
+                file_urls.append({
+                    "fileName": f["fileName"],
+                    "fileUrl": f"/uploads/{Path(f['storagePath']).name}"
+                })
 
     if item["status"] == STATUS_READY:
         queue_position = 0
@@ -303,9 +335,12 @@ def serialize_request(item, queue_metadata=None):
         "tokenNumber": item["tokenNumber"],
         "tokenIndex": item["tokenIndex"],
         "studentName": item["studentName"],
-        "fileName": item["fileName"],
+        "files": file_urls,
         "copies": item["copies"],
         "printType": item["printType"],
+        "paymentMethod": item.get("paymentMethod", "Cash"),
+        "paymentStatus": item.get("paymentStatus", "Unpaid"),
+        "totalCost": item.get("totalCost", 0),
         "status": item["status"],
         "createdAt": item["createdAt"],
         "updatedAt": item["updatedAt"],
@@ -313,9 +348,8 @@ def serialize_request(item, queue_metadata=None):
         "queuePosition": queue_position,
         "estimatedWaitTimeMinutes": wait_minutes,
         "fileDeleted": item["fileDeleted"],
-        "fileUrl": file_url,
         "deletionReason": item.get("deletionReason"),
-        "privacyMessage": "Your file will be automatically deleted after printing for privacy.",
+        "privacyMessage": "Your files will be automatically deleted after printing for privacy.",
     }
 
 
@@ -361,46 +395,66 @@ async def health_check():
 
 @app.post("/api/requests")
 async def create_request(
-    printFile: UploadFile = File(default=None),
+    printFiles: List[UploadFile] = File(...),
     name: str = Form(default=""),
     copies: str = Form(default=""),
     printType: str = Form(default=""),
+    paymentMethod: str = Form(default="Cash"),
 ):
     expire_old_requests()
-    await validate_upload_file(printFile)
 
-    unique_name = safe_upload_name(printFile.filename or "upload")
-    storage_path = UPLOADS_DIR / unique_name
+    if not printFiles:
+        raise HTTPException(status_code=400, detail="Please upload at least one file.")
+
+    for file in printFiles:
+        await validate_upload_file(file)
+
+    files_data = []
+    total_page_count = 0
 
     try:
-        with storage_path.open("wb") as f:
-            shutil.copyfileobj(printFile.file, f)
+        for printFile in printFiles:
+            unique_name = safe_upload_name(printFile.filename or "upload")
+            storage_path = UPLOADS_DIR / unique_name
+            with storage_path.open("wb") as f:
+                shutil.copyfileobj(printFile.file, f)
+            page_count = get_page_count(storage_path, printFile.content_type, printFile.filename)
+            total_page_count += page_count
+            files_data.append({
+                "fileName": printFile.filename or "uploaded-file",
+                "storagePath": str(storage_path)
+            })
 
         copies_value = parse_copies_value(copies)
         validate_print_type(printType)
+
         token_number, token_index = make_token()
         item = create_request_item(
             token_number=token_number,
             token_index=token_index,
             student_name=name,
-            file_name=printFile.filename,
-            storage_path=storage_path,
+            files_data=files_data,
             copies=copies_value,
             print_type=printType,
+            payment_method=paymentMethod,
+            page_count=total_page_count,
         )
-
         print_requests.append(item)
         print_request_lookup[item["tokenNumber"]] = item
         return JSONResponse(status_code=201, content=serialize_request(item))
     except HTTPException:
-        cleanup_storage_path(storage_path)
+        for fd in files_data:
+            cleanup_storage_path(fd["storagePath"])
         raise
     except Exception as error:
-        print("Create request failed:", error)
-        cleanup_storage_path(storage_path)
-        raise HTTPException(status_code=500, detail="Could not create the print request.")
+        import traceback
+        traceback.print_exc()
+        for fd in files_data:
+            cleanup_storage_path(fd["storagePath"])
+        raise HTTPException(status_code=500, detail=str(error))
     finally:
-        await printFile.close()
+        for printFile in printFiles:
+            await printFile.close()
 
 
 @app.get("/api/requests/{token_number}")
@@ -460,6 +514,27 @@ async def update_status(token_number: str, request: Request):
     return serialize_request(item)
 
 
+@app.patch("/api/requests/{token_number}/payment")
+async def update_payment_status(token_number: str, request: Request):
+    expire_old_requests()
+    item = find_request(token_number)
+
+    if item is None:
+        raise HTTPException(status_code=404, detail="Token not found.")
+
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+
+    next_status = body.get("paymentStatus")
+    if next_status in ["Paid", "Unpaid"]:
+        item["paymentStatus"] = next_status
+        item["updatedAt"] = now_iso()
+
+    return serialize_request(item)
+
+
 @app.delete("/api/requests/{token_number}/file")
 async def delete_request_file(token_number: str):
     expire_old_requests()
@@ -468,7 +543,8 @@ async def delete_request_file(token_number: str):
     if item is None:
         raise HTTPException(status_code=404, detail="Token not found.")
 
-    if item["fileDeleted"] or not item["storagePath"]:
+    has_files = any(f.get("storagePath") for f in item.get("files", []))
+    if item["fileDeleted"] or not has_files:
         raise HTTPException(status_code=400, detail="File already deleted.")
 
     delete_file_for_request(item, "manual")
@@ -486,3 +562,4 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", "3000"))
     uvicorn.run("main:app", host="0.0.0.0", port=port)
+

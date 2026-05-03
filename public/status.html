@@ -29,7 +29,7 @@
         <form id="lookupForm" class="lookup-form">
           <label class="field">
             <span>Token number</span>
-            <input type="text" id="tokenInput" placeholder="Example: T-001" required />
+            <input type="text" id="tokenInput" placeholder="Example: 1" required />
           </label>
           <button type="submit" class="cta-button">Load Status</button>
         </form>
@@ -59,6 +59,10 @@
           <article class="metric-card">
             <span>Status</span>
             <strong id="statusValue" class="status-pill">--</strong>
+          </article>
+          <article class="metric-card" id="paymentCard" style="display: none;">
+            <span>Payment</span>
+            <div id="paymentActionBox" style="margin-top: 8px;"></div>
           </article>
         </div>
 

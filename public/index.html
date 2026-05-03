@@ -25,13 +25,13 @@
         <div class="panel__header">
           <span class="panel__eyebrow">Student Submission</span>
           <h2>Send your print job</h2>
-          <p class="panel__description">Upload a PDF or image, choose your settings, and receive a token for tracking.</p>
+          <p class="panel__description">Upload a PDF, PPTX, or image, choose your settings, and receive a token for tracking.</p>
         </div>
 
         <form id="uploadForm" class="stack-form" enctype="multipart/form-data">
           <label class="field">
-            <span>Choose file</span>
-            <input type="file" name="printFile" accept=".pdf,image/*" required />
+            <span>Choose files</span>
+            <input type="file" name="printFiles" accept=".pdf,.pptx,image/*" multiple required />
           </label>
 
           <label class="field">
@@ -42,16 +42,37 @@
           <div class="grid-two">
             <label class="field">
               <span>Copies</span>
-              <input type="number" name="copies" min="1" max="100" value="1" required />
+              <input type="number" name="copies" id="copiesInput" min="1" max="100" value="1" required />
             </label>
 
             <label class="field">
               <span>Print type</span>
-              <select name="printType" required>
+              <select name="printType" id="printTypeInput" required>
                 <option value="Black & White">Black & White</option>
                 <option value="Color">Color</option>
               </select>
             </label>
+          </div>
+
+          <div id="estimatedCostDisplay" style="font-weight: 800; font-size: 1.2rem; color: var(--accent-2); margin-top: 10px; margin-bottom: 10px;">Estimated Cost: ₹2</div>
+
+          <div class="payment-section" style="margin-top: 10px;">
+            <span class="field"><span>Payment Method</span></span>
+            <div class="grid-two" style="margin-top: 8px;">
+              <label class="field" style="display: flex; flex-direction: row; align-items: center; gap: 8px;">
+                <input type="radio" name="paymentMethod" value="Cash" checked style="width: auto;" onchange="document.getElementById('upiContainer').classList.add('hidden')" />
+                <span style="margin: 0; font-size: 1rem; font-weight: normal; text-transform: none; letter-spacing: normal;">Cash in Shop</span>
+              </label>
+              <label class="field" style="display: flex; flex-direction: row; align-items: center; gap: 8px;">
+                <input type="radio" name="paymentMethod" value="UPI" style="width: auto;" onchange="document.getElementById('upiContainer').classList.remove('hidden')" />
+                <span style="margin: 0; font-size: 1rem; font-weight: normal; text-transform: none; letter-spacing: normal;">UPI</span>
+              </label>
+            </div>
+            <div id="upiContainer" class="hidden" style="margin-top: 16px; padding: 16px; background: white; border: var(--border);">
+              <p style="margin-top: 0; margin-bottom: 10px; font-weight: 600;">Scan to pay via UPI or tap the button on mobile:</p>
+              <img id="upiQR" src="" alt="UPI QR Code" style="display: block; max-width: 150px; margin-bottom: 16px;"/>
+              <a id="upiLink" href="#" class="cta-button" style="display:inline-block; text-align:center; text-decoration:none; padding: 10px; font-size: 0.9rem;">Pay via UPI App</a>
+            </div>
           </div>
 
           <div class="privacy-note">
@@ -88,6 +109,8 @@
       </aside>
     </main>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="/api-client.js"></script>
     <script src="/app.js"></script>
   </body>
